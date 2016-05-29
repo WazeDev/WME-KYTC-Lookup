@@ -1,12 +1,10 @@
 // ==UserScript==
 // @name         WME KYTC Lookup
 // @namespace    
-// @version      0.1
+// @version      0.2
 // @description  Look up KY road info from KYTC.  Mouse over a road and hit 'k'.
 // @author       MapOMatic
-// @include      https://editor-beta.waze.com/*editor/*
-// @include      https://www.waze.com/*editor/*
-// @exclude      https://www.waze.com/*user/editor/*
+// @match        https://www.waze.com/*editor/*
 // @grant        none
 // ==/UserScript==
 
@@ -15,29 +13,36 @@
 
     var alertUpdate = false;
     var debugLevel = 0;
-    var kytcLookupVersion = 0.1;
-    var kytcLookupChanges = 'Thanks for installing KYTC lookup!  Move the mouse over a road and hit "k" to look it up.';
-    
+    var scriptVersion = 0.2;
+    var scriptChanges = 'WME KYTC Lookup, v' + scriptVersion + '\nMove the mouse over a road and hit "k" to look it up.\n\n New in version ' + scriptVersion + ':\n';
+    scriptChanges += '- Roads are easier to select at lower zoom levels (zoomed out).'
+
     function processKYTCRouteInfo(routeInfos) {
         log(routeInfos, 1);
-        var routeInfo = $.parseJSON(routeInfos).RouteInfos[0];
-        var out;
-        out = 'Number     : ' + routeInfo.RTUnique + "\n";
-        out += 'Name       : ' + routeInfo.Routename + "\n";
-        out += 'County     : ' + routeInfo.CountyName + "\n" ;
-        out += 'District   : ' + routeInfo.District + "\n";
-        out += 'Mile Point : ' + routeInfo.MilePoint + "\n";
-        out += 'Gov Level  : ' + routeInfo.GovLevelValue + "\n";
-        out += 'FC         : ' + routeInfo.FunctionalClass + "\n";
-        out += 'Posted SL  : ' + routeInfo.PostedSpeedLimit;
-        alert(out);
-         
+        var jsonRouteInfos = $.parseJSON(routeInfos);
+        if (jsonRouteInfos.RouteInfos.length > 0) {
+            var routeInfo = jsonRouteInfos.RouteInfos[0];
+            var out;
+            out = 'Number     : ' + routeInfo.RTUnique + "\n";
+            out += 'Name       : ' + routeInfo.Routename + "\n";
+            out += 'County     : ' + routeInfo.CountyName + "\n" ;
+            out += 'District   : ' + routeInfo.District + "\n";
+            out += 'Mile Point : ' + routeInfo.MilePoint + "\n";
+            out += 'Gov Level  : ' + routeInfo.GovLevelValue + "\n";
+            out += 'FC         : ' + routeInfo.FunctionalClass + "\n";
+            out += 'Posted SL  : ' + routeInfo.PostedSpeedLimit;
+            alert(out);
+        }
+        log('no road found', 0);
     }
 
     function processKYTCCoords(coordsIn) {
         log(coordsIn, 1);
         var jsonCoords = $.parseJSON(coordsIn);
-        var url = 'https://maps.kytc.ky.gov/arcgis/rest/services/MeasuredRoute/MapServer/exts/KYTCGISREST/GetRouteInfo?X=' + jsonCoords.geometries[0].x + '&Y=' + jsonCoords.geometries[0].y + '&SearchRadius=10&f=json';
+        var searchRadius = W.map.zoom <= 6 ? 640 / Math.pow(2, W.map.zoom): 10;
+        log("searchRadius = " + searchRadius, 1);
+        var url = 'https://maps.kytc.ky.gov/arcgis/rest/services/MeasuredRoute/MapServer/exts/KYTCGISREST/GetRouteInfo?X=';
+        url += jsonCoords.geometries[0].x + '&Y=' + jsonCoords.geometries[0].y + '&SearchRadius=' + searchRadius + '&f=json';
         $.ajax({
             url: url,
             method: 'GET',
@@ -48,8 +53,9 @@
     function checkKeyDown(e) {
         if(e.keyCode==75) {
             var mousePosition = $('.mouse-position').text().split(' ');
-            log('mousePosition = ' + mousePosition,0);
-            var url = 'https://kygisserver.ky.gov/arcgis/rest/services/Utilities/Geometry/GeometryServer/project?inSR=4326&outSR=102763&geometries=' + mousePosition[0] + '%2C' + mousePosition[1] + '&transformation=&transformForward=true&f=json';
+            log('looking up road at coordinate ' + mousePosition,0);
+            var url = 'https://kygisserver.ky.gov/arcgis/rest/services/Utilities/Geometry/GeometryServer/project?inSR=4326&outSR=102763&geometries=';
+            url += mousePosition[0] + '%2C' + mousePosition[1] + '&transformation=&transformForward=true&f=json';
             log(url, 1);
             $.ajax({
                 url: url,
@@ -77,6 +83,7 @@
 
         /* Event listeners */
         W.loginManager.events.register('afterloginchanged', this, init);
+        //W.selectionManager.events.register('selectionchanged', this, checkSelection);
         document.addEventListener('keydown', checkKeyDown, false);
 
         log('Initialized.', 0);
@@ -95,7 +102,7 @@
             }, 1000);
         }
     }
-	
+
     log('Bootstrap...', 0);
     bootstrap();
 })();
