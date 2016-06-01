@@ -2,7 +2,7 @@
 // @name         WME KYTC Lookup
 // @namespace    
 // @version      0.3
-// @description  Look up KY road info from KYTC.  Mouse over a road and hit 'k'.
+// @description  Look up KY road info from KYTC.  Mouse over a road and hit 'ALT+k'.
 // @author       MapOMatic
 // @match        https://www.waze.com/*editor/*
 // @grant        none
