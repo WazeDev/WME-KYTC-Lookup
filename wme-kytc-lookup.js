@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME KYTC Lookup
 // @namespace
-// @version      2020.07.21.001
+// @version      2020.07.21.002
 // @description  Look up KY road info from KYTC.  Mouse over a road and hit 'ALT+k'.
 // @author       MapOMatic
 // @include     /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -50,7 +50,6 @@ function processKYTCRouteInfo(routeInfos) {
 }
 
 async function processKYTCCoords(coordsIn) {
-    debugger;
     const jsonCoords = coordsIn;
     const searchRadius = W.map.zoom <= 6 ? 640 / (W.map.zoom ** 2) : 10;
     const url = `https://maps.kytc.ky.gov/arcgis/rest/services/MeasuredRoute/MapServer/exts/KYTCGISREST/GetRouteInfo?X=${
@@ -79,7 +78,7 @@ async function kytcButtonClick() {
     // logDebug(url);
     // const result = await $.getJSON(url);
     // const pts = result.geometries;
-    url = `https://maps.kytc.ky.gov/functionalclass/?xmin=${wazeExt.left}&ymin=${wazeExt.bottom}&xmax=${wazeExt.right}&ymax=${wazeExt.top}`;
+    const url = `https://maps.kytc.ky.gov/functionalclass/?xmin=${wazeExt.left}&ymin=${wazeExt.bottom}&xmax=${wazeExt.right}&ymax=${wazeExt.top}`;
     logDebug(url);
     window.open(url, '_blank');
 }
